@@ -95,6 +95,8 @@ export abstract class BaseAxis implements Axis {
       this.outerPadding = Math.min(spaceRequired.width / 2, maxPadding);
 
       const rotationRad = Math.abs((this.axisConfig.labelRotation ?? 0) * (Math.PI / 180));
+      // Projects the rotated text bounding box onto the vertical axis:
+      // height = W*sin(θ) + H*cos(θ), where W=text width, H=text height, θ=rotation angle
       const rotatedHeight =
         rotationRad === 0
           ? spaceRequired.height
