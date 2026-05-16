@@ -1090,6 +1090,10 @@ export interface XYChartAxisConfig {
    * Width of the axis line
    */
   axisLineWidth?: number;
+  /**
+   * Rotation angle (in degrees) for axis labels. Useful to avoid overlapping labels on the x-axis.
+   */
+  labelRotation?: number;
 }
 /**
  * The object containing configurations specific for req diagrams

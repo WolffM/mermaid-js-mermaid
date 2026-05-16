@@ -1308,6 +1308,10 @@ $defs: # JSON Schema definition (maybe we should move these to a separate file)
         type: number
         default: 2
         minimum: 1
+      labelRotation:
+        description: Rotation angle (in degrees) for axis labels. Useful to avoid overlapping labels on the x-axis.
+        type: number
+        default: 0
 
   XYChartConfig:
     title: XYChart Config
