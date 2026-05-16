@@ -94,8 +94,16 @@ export abstract class BaseAxis implements Axis {
       const maxPadding = MAX_OUTER_PADDING_PERCENT_FOR_WRT_LABEL * availableSpace.width;
       this.outerPadding = Math.min(spaceRequired.width / 2, maxPadding);
 
-      const heightRequired = spaceRequired.height + this.axisConfig.labelPadding * 2;
-      this.labelTextHeight = spaceRequired.height;
+      const rotationRad = Math.abs((this.axisConfig.labelRotation ?? 0) * (Math.PI / 180));
+      // Projects the rotated text bounding box onto the vertical axis:
+      // height = W*sin(θ) + H*cos(θ), where W=text width, H=text height, θ=rotation angle
+      const rotatedHeight =
+        rotationRad === 0
+          ? spaceRequired.height
+          : spaceRequired.width * Math.sin(rotationRad) +
+            spaceRequired.height * Math.cos(rotationRad);
+      const heightRequired = rotatedHeight + this.axisConfig.labelPadding * 2;
+      this.labelTextHeight = rotatedHeight;
       if (heightRequired <= availableHeight) {
         availableHeight -= heightRequired;
         this.showLabel = true;
@@ -270,6 +278,8 @@ export abstract class BaseAxis implements Axis {
       });
     }
     if (this.showLabel) {
+      const labelRotation = this.axisConfig.labelRotation ?? 0;
+      const horizontalPos = labelRotation < 0 ? 'right' : labelRotation > 0 ? 'left' : 'center';
       drawableElement.push({
         type: 'text',
         groupTexts: ['bottom-axis', 'label'],
@@ -283,9 +293,9 @@ export abstract class BaseAxis implements Axis {
             (this.showAxisLine ? this.axisConfig.axisLineWidth : 0),
           fill: this.axisThemeConfig.labelColor,
           fontSize: this.axisConfig.labelFontSize,
-          rotation: 0,
+          rotation: labelRotation,
           verticalPos: 'top',
-          horizontalPos: 'center',
+          horizontalPos,
         })),
       });
     }
