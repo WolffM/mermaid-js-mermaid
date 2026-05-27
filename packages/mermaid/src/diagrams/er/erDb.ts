@@ -16,6 +16,9 @@ import type { DiagramDB } from '../../diagram-api/types.js';
 
 export class ErDB implements DiagramDB {
   private entities = new Map<string, EntityNode>();
+  private groups = new Map<string, Node>();
+  private groupsByParentAndName = new Map<string, string>();
+  private currentGroupStack: string[] = [];
   private relationships: Relationship[] = [];
   private classes = new Map<string, EntityClass>();
   private direction = 'TB';
@@ -42,6 +45,8 @@ export class ErDB implements DiagramDB {
     this.addCssStyles = this.addCssStyles.bind(this);
     this.addClass = this.addClass.bind(this);
     this.setClass = this.setClass.bind(this);
+    this.pushGroup = this.pushGroup.bind(this);
+    this.popGroup = this.popGroup.bind(this);
     this.setAccTitle = this.setAccTitle.bind(this);
     this.setAccDescription = this.setAccDescription.bind(this);
   }
@@ -52,6 +57,7 @@ export class ErDB implements DiagramDB {
    * @param alias - The alias of the entity
    */
   public addEntity(name: string, alias = ''): EntityNode {
+    const parentId = this.currentGroupStack.at(-1);
     if (!this.entities.has(name)) {
       this.entities.set(name, {
         id: `entity-${name}-${this.entities.size}`,
@@ -59,15 +65,22 @@ export class ErDB implements DiagramDB {
         attributes: [],
         alias,
         shape: 'erBox',
+        parentId,
         look: getConfig().look ?? 'default',
         cssClasses: 'default',
         cssStyles: [],
         labelType: 'markdown',
       });
       log.info('Added new entity :', name);
-    } else if (!this.entities.get(name)?.alias && alias) {
-      this.entities.get(name)!.alias = alias;
-      log.info(`Add alias '${alias}' to entity '${name}'`);
+    } else {
+      const entity = this.entities.get(name)!;
+      if (!entity.alias && alias) {
+        entity.alias = alias;
+        log.info(`Add alias '${alias}' to entity '${name}'`);
+      }
+      if (!entity.parentId && parentId) {
+        entity.parentId = parentId;
+      }
     }
 
     return this.entities.get(name)!;
@@ -83,6 +96,43 @@ export class ErDB implements DiagramDB {
 
   public getClasses() {
     return this.classes;
+  }
+
+  private addGroup(name: string) {
+    const parentId = this.currentGroupStack.at(-1) ?? '';
+    // Use an unlikely delimiter to avoid collisions for normal source text.
+    const key = `${parentId}\u0000${name}`;
+    const existingGroupId = this.groupsByParentAndName.get(key);
+    if (existingGroupId) {
+      return this.groups.get(existingGroupId)!;
+    }
+
+    const groupId = `entity-group-${this.groups.size}`;
+    const groupNode: Node = {
+      id: groupId,
+      label: name,
+      shape: 'rect',
+      isGroup: true,
+      parentId: parentId ? parentId : undefined,
+      padding: 16,
+      look: getConfig().look ?? 'default',
+      cssClasses: 'default',
+      cssStyles: [],
+      labelType: 'markdown',
+    };
+
+    this.groupsByParentAndName.set(key, groupId);
+    this.groups.set(groupId, groupNode);
+    return groupNode;
+  }
+
+  public pushGroup(name: string) {
+    const group = this.addGroup(name);
+    this.currentGroupStack.push(group.id);
+  }
+
+  public popGroup() {
+    this.currentGroupStack.pop();
   }
 
   public addAttributes(entityName: string, attribs: Attribute[]) {
@@ -199,6 +249,9 @@ export class ErDB implements DiagramDB {
 
   public clear() {
     this.entities = new Map();
+    this.groups = new Map();
+    this.groupsByParentAndName = new Map();
+    this.currentGroupStack = [];
     this.classes = new Map();
     this.relationships = [];
     commonClear();
@@ -208,6 +261,10 @@ export class ErDB implements DiagramDB {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     const config = getConfig();
+
+    for (const groupNode of this.groups.values()) {
+      nodes.push(groupNode);
+    }
 
     let colorIndex = 0;
     for (const entityKey of this.entities.keys()) {
