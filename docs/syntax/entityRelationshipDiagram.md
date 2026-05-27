@@ -426,6 +426,46 @@ Possible diagram orientations are:
 - RL - Right to left
 - LR - Left to right
 
+### Grouping entities
+
+Entities can be grouped into named namespaces. This helps visually organize related entities (for example, collections and sub-collections in NoSQL models). Start a group with `namespace <name>` and close it with `endNamespace`.
+
+```mermaid-example
+erDiagram
+    namespace "User Domain"
+        USER
+        ROLE
+    endNamespace
+```
+
+```mermaid
+erDiagram
+    namespace "User Domain"
+        USER
+        ROLE
+    endNamespace
+```
+
+Namespaces can be nested:
+
+```mermaid-example
+erDiagram
+    namespace Platform
+        namespace Billing
+            INVOICE
+        endNamespace
+    endNamespace
+```
+
+```mermaid
+erDiagram
+    namespace Platform
+        namespace Billing
+            INVOICE
+        endNamespace
+    endNamespace
+```
+
 ### Styling a node
 
 It is possible to apply specific styles such as a thicker border or a different background color to a node.

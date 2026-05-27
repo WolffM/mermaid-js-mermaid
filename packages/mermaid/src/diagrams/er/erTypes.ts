@@ -4,12 +4,27 @@ export interface EntityNode {
   attributes: Attribute[];
   alias: string;
   shape: string;
+  isGroup?: false;
+  parentId?: string;
   look?: string;
   cssClasses?: string;
   cssStyles?: string[];
   cssCompiledStyles?: string[];
   labelType?: string;
   colorIndex?: number;
+}
+
+export interface EntityGroupNode {
+  id: string;
+  label: string;
+  shape: 'rect';
+  isGroup: true;
+  parentId?: string;
+  padding: number;
+  look?: string;
+  cssClasses?: string;
+  cssStyles?: string[];
+  labelType?: string;
 }
 
 export interface Attribute {

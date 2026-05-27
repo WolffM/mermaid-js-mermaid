@@ -25,6 +25,8 @@ accDescr\s*"{"\s*                                { this.begin("acc_descr_multili
 \"[^"%\r\n\v\b\\]+\"            return 'ENTITY_NAME';
 \"[^"]*\"                       return 'WORD';
 "erDiagram"                     return 'ER_DIAGRAM';
+"namespace"                    return 'NAMESPACE';
+"endNamespace"                 return 'NAMESPACE_STOP';
 "{"                             { this.begin("block"); return 'BLOCK_START'; }
 \#                              return 'BRKT';
 "#"                             return 'BRKT';
@@ -179,9 +181,19 @@ statement
     | acc_descr acc_descr_value  { $$=$2.trim();yy.setAccDescription($$); }
     | acc_descr_multiline_value { $$=$1.trim();yy.setAccDescription($$); }
     | direction
+    | namespaceStatement
     | classDefStatement
     | classStatement
     | styleStatement
+    ;
+
+namespaceStart
+    : NAMESPACE entityName { yy.pushGroup($2); }
+    ;
+
+namespaceStatement
+    : namespaceStart NEWLINE document NAMESPACE_STOP { yy.popGroup(); }
+    | namespaceStart NAMESPACE_STOP { yy.popGroup(); }
     ;
 
 direction
