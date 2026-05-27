@@ -4,7 +4,6 @@ export interface EntityNode {
   attributes: Attribute[];
   alias: string;
   shape: string;
-  isGroup?: false;
   parentId?: string;
   look?: string;
   cssClasses?: string;

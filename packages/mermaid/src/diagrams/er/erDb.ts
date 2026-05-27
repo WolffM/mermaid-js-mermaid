@@ -65,7 +65,6 @@ export class ErDB implements DiagramDB {
         attributes: [],
         alias,
         shape: 'erBox',
-        isGroup: false,
         parentId,
         look: getConfig().look ?? 'default',
         cssClasses: 'default',
@@ -101,7 +100,7 @@ export class ErDB implements DiagramDB {
 
   private addGroup(name: string) {
     const parentId = this.currentGroupStack.at(-1) ?? '';
-    // Use a delimiter that cannot appear in source text to avoid key collisions.
+    // Use an unlikely delimiter to avoid collisions for normal source text.
     const key = `${parentId}\u0000${name}`;
     const existingGroupId = this.groupsByParentAndName.get(key);
     if (existingGroupId) {
@@ -114,7 +113,7 @@ export class ErDB implements DiagramDB {
       label: name,
       shape: 'rect',
       isGroup: true,
-      parentId: parentId || undefined,
+      parentId: parentId ? parentId : undefined,
       padding: 16,
       look: getConfig().look ?? 'default',
       cssClasses: 'default',
