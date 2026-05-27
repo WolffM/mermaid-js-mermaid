@@ -1077,6 +1077,46 @@ describe('when parsing ER diagram it...', function () {
     });
   });
 
+  describe('entity grouping', function () {
+    it('should allow grouping entities in a namespace', function () {
+      erDiagram.parser.parse(`erDiagram
+        namespace "User Domain"
+          USER
+          ROLE
+        endNamespace
+      `);
+
+      const data = erDb.getData();
+      const groupNode = data.nodes.find((node) => node.isGroup && node.label === 'User Domain');
+      const userNode = data.nodes.find((node) => node.id === erDb.getEntity('USER').id);
+      const roleNode = data.nodes.find((node) => node.id === erDb.getEntity('ROLE').id);
+
+      expect(groupNode).toBeDefined();
+      expect(userNode.parentId).toBe(groupNode.id);
+      expect(roleNode.parentId).toBe(groupNode.id);
+    });
+
+    it('should allow nested namespaces for subcollections', function () {
+      erDiagram.parser.parse(`erDiagram
+        namespace Platform
+          namespace Billing
+            INVOICE
+          endNamespace
+        endNamespace
+      `);
+
+      const data = erDb.getData();
+      const platformNode = data.nodes.find((node) => node.isGroup && node.label === 'Platform');
+      const billingNode = data.nodes.find((node) => node.isGroup && node.label === 'Billing');
+      const invoiceNode = data.nodes.find((node) => node.id === erDb.getEntity('INVOICE').id);
+
+      expect(platformNode).toBeDefined();
+      expect(billingNode).toBeDefined();
+      expect(billingNode.parentId).toBe(platformNode.id);
+      expect(invoiceNode.parentId).toBe(billingNode.id);
+    });
+  });
+
   describe('prototype properties', function () {
     it.each(['__proto__', 'constructor', 'prototype'])(
       'should work with a %s property',
