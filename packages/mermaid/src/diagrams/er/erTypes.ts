@@ -14,19 +14,6 @@ export interface EntityNode {
   colorIndex?: number;
 }
 
-export interface EntityGroupNode {
-  id: string;
-  label: string;
-  shape: 'rect';
-  isGroup: true;
-  parentId?: string;
-  padding: number;
-  look?: string;
-  cssClasses?: string;
-  cssStyles?: string[];
-  labelType?: string;
-}
-
 export interface Attribute {
   type: string;
   name: string;

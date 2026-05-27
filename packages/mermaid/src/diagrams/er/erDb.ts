@@ -1,14 +1,7 @@
 import { log } from '../../logger.js';
 import { getConfig } from '../../diagram-api/diagramAPI.js';
 import type { Edge, Node } from '../../rendering-util/types.js';
-import type {
-  EntityNode,
-  EntityGroupNode,
-  Attribute,
-  Relationship,
-  EntityClass,
-  RelSpec,
-} from './erTypes.js';
+import type { EntityNode, Attribute, Relationship, EntityClass, RelSpec } from './erTypes.js';
 import {
   setAccTitle,
   getAccTitle,
@@ -23,7 +16,7 @@ import type { DiagramDB } from '../../diagram-api/types.js';
 
 export class ErDB implements DiagramDB {
   private entities = new Map<string, EntityNode>();
-  private groups = new Map<string, EntityGroupNode>();
+  private groups = new Map<string, Node>();
   private groupsByParentAndName = new Map<string, string>();
   private currentGroupStack: string[] = [];
   private relationships: Relationship[] = [];
@@ -108,6 +101,7 @@ export class ErDB implements DiagramDB {
 
   private addGroup(name: string) {
     const parentId = this.currentGroupStack.at(-1) ?? '';
+    // Use a delimiter that cannot appear in source text to avoid key collisions.
     const key = `${parentId}\u0000${name}`;
     const existingGroupId = this.groupsByParentAndName.get(key);
     if (existingGroupId) {
@@ -115,7 +109,7 @@ export class ErDB implements DiagramDB {
     }
 
     const groupId = `entity-group-${this.groups.size}`;
-    const groupNode: EntityGroupNode = {
+    const groupNode: Node = {
       id: groupId,
       label: name,
       shape: 'rect',
@@ -270,7 +264,7 @@ export class ErDB implements DiagramDB {
     const config = getConfig();
 
     for (const groupNode of this.groups.values()) {
-      nodes.push(groupNode as unknown as Node);
+      nodes.push(groupNode);
     }
 
     let colorIndex = 0;
