@@ -61,4 +61,23 @@ end`);
     expect(subgraph2.title).toBe('**Two**');
     expect(subgraph2.labelType).toBe('markdown');
   });
+
+  it('markdown formatting with escaped backticks in quoted labels', function () {
+    flow.parser.parse(String.raw`flowchart LR
+A["\`The cat in **the** hat\`"] -- "\`The *bat* in the chat\`" --> B
+subgraph SG["\`Long **subgraph** title\`"]
+  C
+end`);
+
+    const vertices = flow.parser.yy.getVertices();
+    const edges = flow.parser.yy.getEdges();
+    const subgraphs = flow.parser.yy.getSubGraphs();
+
+    expect(vertices.get('A').text).toBe('The cat in **the** hat');
+    expect(vertices.get('A').labelType).toBe('markdown');
+    expect(edges[0].text).toBe('The *bat* in the chat');
+    expect(edges[0].labelType).toBe('markdown');
+    expect(subgraphs[0].title).toBe('Long **subgraph** title');
+    expect(subgraphs[0].labelType).toBe('markdown');
+  });
 });

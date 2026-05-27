@@ -98,6 +98,21 @@ export class FlowDB implements DiagramDB {
     }
   }
 
+  private normalizeEscapedMarkdown(textObj?: { text: string; type: string }) {
+    if (!textObj || textObj.type === 'markdown') {
+      return textObj;
+    }
+    const escapedMarkdownMatch = /^\\`([\S\s]*)\\`$/.exec(textObj.text);
+    if (!escapedMarkdownMatch) {
+      return textObj;
+    }
+    return {
+      ...textObj,
+      text: escapedMarkdownMatch[1],
+      type: 'markdown',
+    };
+  }
+
   /**
    * Sets the diagram's SVG element ID, used to prefix domIds for uniqueness
    * across multiple diagrams on the same page.
@@ -188,6 +203,7 @@ export class FlowDB implements DiagramDB {
     this.vertexCounter++;
 
     if (textObj !== undefined) {
+      textObj = this.normalizeEscapedMarkdown(textObj);
       this.config = getConfig();
       txt = this.sanitizeText(textObj.text.trim());
       vertex.labelType = textObj.type;
@@ -289,13 +305,14 @@ export class FlowDB implements DiagramDB {
     const linkTextObj = type.text;
 
     if (linkTextObj !== undefined) {
-      edge.text = this.sanitizeText(linkTextObj.text.trim());
+      const normalizedLinkTextObj = this.normalizeEscapedMarkdown(linkTextObj);
+      edge.text = this.sanitizeText(normalizedLinkTextObj.text.trim());
 
       // strip quotes if string starts and ends with a quote
       if (edge.text.startsWith('"') && edge.text.endsWith('"')) {
         edge.text = edge.text.substring(1, edge.text.length - 1);
       }
-      edge.labelType = this.sanitizeNodeLabelType(linkTextObj.type);
+      edge.labelType = this.sanitizeNodeLabelType(normalizedLinkTextObj.type);
     }
 
     if (type !== undefined) {
@@ -667,6 +684,7 @@ You have to call mermaid.initialize.`
     list: string[],
     _title: { text: string; type: string }
   ) {
+    _title = this.normalizeEscapedMarkdown(_title) as { text: string; type: string };
     let id: string | undefined = _id.text.trim();
     let title = _title.text;
     if (_id === _title && /\s/.exec(_title.text)) {
